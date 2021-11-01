@@ -1,0 +1,20 @@
+[package]
+name = "horcrux"
+version = "0.1.0"
+authors = ["G. Endignoux <ggendx@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+# The "small_rng" feature is only used for benchmarks, but there's currently no
+# way to write that in the Cargo.toml.
+# See https://github.com/rust-lang/cargo/issues/2911.
+rand = { version = "0.8.4", features = ["small_rng"] }
+hex = { version = "0.4.3", optional = true }
+regex = { version = "1", optional = true }
+
+[features]
+default = ["clmul"]
+clmul = []
+parse = ["hex", "regex"]

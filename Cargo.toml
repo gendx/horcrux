@@ -1,0 +1,20 @@
+[package]
+name = "horcrux-cli"
+version = "0.1.0"
+authors = ["G. Endignoux <ggendx@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[workspace]
+
+[dependencies]
+horcrux = { path = "horcrux", features = ["parse"] }
+clap = "2.33.3"
+hex = "0.4.3"
+rand = "0.8.4"
+regex = "1"
+
+[dev-dependencies]
+plotters = "0.3.1"
+plotters-backend = "0.3.2"
