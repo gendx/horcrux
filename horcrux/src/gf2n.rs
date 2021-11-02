@@ -54,7 +54,6 @@ impl Word for u128 {
 
     #[cfg(feature = "parse")]
     fn from_bytes(bytes: &[u8]) -> Self {
-        assert_eq!(bytes.len(), Self::NBYTES);
         let array = bytes.try_into().unwrap();
         u128::from_be_bytes(array)
     }
@@ -68,7 +67,6 @@ impl Word for u64 {
 
     #[cfg(feature = "parse")]
     fn from_bytes(bytes: &[u8]) -> Self {
-        assert_eq!(bytes.len(), Self::NBYTES);
         let array = bytes.try_into().unwrap();
         u64::from_be_bytes(array)
     }
@@ -82,7 +80,6 @@ impl Word for u32 {
 
     #[cfg(feature = "parse")]
     fn from_bytes(bytes: &[u8]) -> Self {
-        assert_eq!(bytes.len(), Self::NBYTES);
         let array = bytes.try_into().unwrap();
         u32::from_be_bytes(array)
     }
@@ -96,7 +93,6 @@ impl Word for u16 {
 
     #[cfg(feature = "parse")]
     fn from_bytes(bytes: &[u8]) -> Self {
-        assert_eq!(bytes.len(), Self::NBYTES);
         let array = bytes.try_into().unwrap();
         u16::from_be_bytes(array)
     }
@@ -110,7 +106,6 @@ impl Word for u8 {
 
     #[cfg(feature = "parse")]
     fn from_bytes(bytes: &[u8]) -> Self {
-        assert_eq!(bytes.len(), Self::NBYTES);
         let array = bytes.try_into().unwrap();
         u8::from_be_bytes(array)
     }
