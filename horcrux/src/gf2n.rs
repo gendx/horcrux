@@ -6,6 +6,7 @@
 use crate::field::Field;
 use rand::distributions::{Distribution, Standard};
 use rand::{CryptoRng, Rng};
+use std::convert::TryInto;
 use std::fmt::{Debug, Display};
 use std::hash::{Hash, Hasher};
 use std::ops::{Add, AddAssign, BitAnd, BitXor, BitXorAssign, Mul, MulAssign, Not, Shl, Shr, Sub};
@@ -54,8 +55,8 @@ impl Word for u128 {
     #[cfg(feature = "parse")]
     fn from_bytes(bytes: &[u8]) -> Self {
         assert_eq!(bytes.len(), Self::NBYTES);
-        let array: &[u8; 16] = unsafe { &*(bytes.as_ptr() as *const [u8; 16]) };
-        u128::from_be_bytes(*array)
+        let array = bytes.try_into().unwrap();
+        u128::from_be_bytes(array)
     }
 }
 
@@ -68,8 +69,8 @@ impl Word for u64 {
     #[cfg(feature = "parse")]
     fn from_bytes(bytes: &[u8]) -> Self {
         assert_eq!(bytes.len(), Self::NBYTES);
-        let array: &[u8; 8] = unsafe { &*(bytes.as_ptr() as *const [u8; 8]) };
-        u64::from_be_bytes(*array)
+        let array = bytes.try_into().unwrap();
+        u64::from_be_bytes(array)
     }
 }
 
@@ -82,8 +83,8 @@ impl Word for u32 {
     #[cfg(feature = "parse")]
     fn from_bytes(bytes: &[u8]) -> Self {
         assert_eq!(bytes.len(), Self::NBYTES);
-        let array: &[u8; 4] = unsafe { &*(bytes.as_ptr() as *const [u8; 4]) };
-        u32::from_be_bytes(*array)
+        let array = bytes.try_into().unwrap();
+        u32::from_be_bytes(array)
     }
 }
 
@@ -96,8 +97,8 @@ impl Word for u16 {
     #[cfg(feature = "parse")]
     fn from_bytes(bytes: &[u8]) -> Self {
         assert_eq!(bytes.len(), Self::NBYTES);
-        let array: &[u8; 2] = unsafe { &*(bytes.as_ptr() as *const [u8; 2]) };
-        u16::from_be_bytes(*array)
+        let array = bytes.try_into().unwrap();
+        u16::from_be_bytes(array)
     }
 }
 
@@ -110,8 +111,8 @@ impl Word for u8 {
     #[cfg(feature = "parse")]
     fn from_bytes(bytes: &[u8]) -> Self {
         assert_eq!(bytes.len(), Self::NBYTES);
-        let array: &[u8; 1] = unsafe { &*(bytes.as_ptr() as *const [u8; 1]) };
-        u8::from_be_bytes(*array)
+        let array = bytes.try_into().unwrap();
+        u8::from_be_bytes(array)
     }
 }
 
