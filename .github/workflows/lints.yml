@@ -1,0 +1,27 @@
+on: [push, pull_request]
+name: Lints on nightly toolchain
+jobs:
+  lints:
+    runs-on: ubuntu-latest
+    env:
+      RUSTFLAGS: "-D warnings"
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: nightly
+          override: true
+          components: rustfmt, clippy
+
+      - name: Check formatting
+        uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: -- --check
+
+      - name: Check Clippy lints
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: --verbose
