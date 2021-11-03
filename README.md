@@ -1,5 +1,7 @@
 # Horcrux - Rust implementation of Shamir's Secret Sharing
 
+![Build Status](https://github.com/gendx/horcrux/workflows/Build%20and%20run%20tests/badge.svg)
+
 This program is an example implementation of [Shamir's Secret Sharing](https://en.wikipedia.org/wiki/Shamir%27s_Secret_Sharing) in Rust.
 
 You can find more details in [this blog post](https://gendignoux.com/blog/2021/11/01/horcrux-1-math.html).

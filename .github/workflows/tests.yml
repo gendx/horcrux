@@ -1,5 +1,5 @@
 on: [push, pull_request]
-name: Build and run tests on native CPU
+name: Build and run tests
 jobs:
   build_and_test:
     runs-on: ubuntu-latest
