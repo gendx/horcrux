@@ -2,7 +2,7 @@ use plotters::chart::{ChartBuilder, ChartContext, SeriesLabelPosition};
 use plotters::coord::{cartesian::Cartesian2d, combinators::IntoLogRange, ranged1d::Ranged, Shift};
 use plotters::drawing::{DrawingArea, IntoDrawingArea};
 use plotters::element::{
-    Circle, Cross, Drawable, DynElement, EmptyElement, IntoDynElement, PathElement, PointCollection,
+    Circle, Drawable, DynElement, EmptyElement, IntoDynElement, PathElement, PointCollection,
 };
 use plotters::prelude::SVGBackend;
 use plotters::series::LineSeries;
@@ -524,7 +524,6 @@ struct LineStyle {
 
 enum Decorator {
     Circle { size: u32, filled: bool },
-    Cross { size: u32 },
     Triangle { size: u32, filled: bool },
     Square { size: u32, filled: bool },
 }
@@ -546,7 +545,6 @@ impl Decorator {
                 },
             )
             .into_dyn(),
-            Decorator::Cross { size } => Cross::new(coord, *size, color.stroke_width(2)).into_dyn(),
             Decorator::Triangle { size, filled } => Triangle::new(
                 coord,
                 *size,
@@ -784,21 +782,16 @@ fn parse(input: impl BufRead) -> Vec<Bench> {
         let line = line.unwrap();
         if let Some(caps) = re_bench.captures(&line) {
             println!("Line matches bench: {}", line);
-            let module = caps[1].to_owned();
             let field = caps[2].to_owned();
             let test = caps[3].to_owned();
 
             let mut avg = caps[4].to_owned();
             avg.retain(|c| c != ',');
-            let mut std = caps[5].to_owned();
-            std.retain(|c| c != ',');
 
             benches.push(Bench {
-                module,
                 field,
                 test,
                 avg: avg.parse().unwrap(),
-                std: std.parse().unwrap(),
             });
         }
     }
@@ -809,9 +802,7 @@ fn parse(input: impl BufRead) -> Vec<Bench> {
 
 #[derive(Debug)]
 struct Bench {
-    module: String,
     field: String,
     test: String,
     avg: u64,
-    std: u64,
 }
