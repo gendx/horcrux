@@ -90,12 +90,14 @@ fn main() {
         .parse::<usize>()
         .expect("--threshold must be an integer");
 
-    if shares == 0 || shares > 255 {
-        panic!("--shares must be between 1 and 255");
-    }
-    if threshold == 0 || threshold > shares {
-        panic!("--threshold must be between 1 and --shares");
-    }
+    assert!(
+        shares != 0 && shares <= 255,
+        "--shares must be between 1 and 255"
+    );
+    assert!(
+        threshold != 0 && threshold <= shares,
+        "--threshold must be between 1 and --shares"
+    );
 
     match bitsize {
         8 => dispatch_shamir_type::<GF8>(matches, threshold, shares),
@@ -161,9 +163,10 @@ where
         println!("{}", s);
     }
 
-    if shares.len() < k {
-        panic!("Found fewer shares than the threshold, cannot reconstruct!");
-    }
+    assert!(
+        shares.len() >= k,
+        "Found fewer shares than the threshold, cannot reconstruct!"
+    );
 
     match args.value_of("at") {
         Some(at) => {
