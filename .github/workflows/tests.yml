@@ -1,7 +1,27 @@
 on: [push, pull_request]
-name: Build and run tests
+name: Tests
 jobs:
-  build_and_test:
+  test:
+    strategy:
+      matrix:
+        test_case:
+          - "gf2n::test::fast_"
+          - "gf2n::test::clmul_"
+          - "gf2n::test::gf008::"
+          - "gf2n::test::gf016::"
+          - "gf2n::test::gf032::"
+          - "gf2n::test::gf064::"
+          - "gf2n::test::gf128::"
+          - "gf2n::test::gf256::"
+          - "shamir::test::fast_"
+          - "shamir::test::gf008::"
+          - "shamir::test::gf016::"
+          - "shamir::test::gf032::"
+          - "shamir::test::gf064::"
+          - "shamir::test::gf128::"
+          - "shamir::test::gf256::"
+          - "can_split"
+          - "can_reconstruct"
     runs-on: ubuntu-latest
     env:
       RUSTFLAGS: "-C target-cpu=native -D warnings"
@@ -13,14 +33,8 @@ jobs:
           toolchain: nightly
           override: true
 
-      - name: Build
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --verbose
-
-      - name: Tests
+      - name: Tests (${{ matrix.test_case }})
         uses: actions-rs/cargo@v1
         with:
           command: test
-          args: --all --verbose
+          args: --release --all ${{ matrix.test_case }}
