@@ -20,8 +20,14 @@ jobs:
           command: fmt
           args: -- --check
 
-      - name: Check Clippy lints
+      - name: Check Clippy lints (root directory)
         uses: actions-rs/cargo@v1
         with:
           command: clippy
-          args: --all --verbose
+          args: --verbose
+
+      - name: Check Clippy lints (horcrux/ library)
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: --manifest-path horcrux/Cargo.toml --verbose
