@@ -3,6 +3,7 @@ name: Lints on nightly toolchain
 jobs:
   lints:
     strategy:
+      fail-fast: false
       matrix:
         manifest_path:
           - "Cargo.toml"
@@ -23,13 +24,7 @@ jobs:
           profile: minimal
           toolchain: nightly
           override: true
-          components: rustfmt, clippy
-
-      - name: Check formatting
-        uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: -- --check
+          components: clippy
 
       - name: Check Clippy lints
         uses: actions-rs/cargo@v1
