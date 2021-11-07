@@ -2,6 +2,17 @@ on: [push, pull_request]
 name: Lints on nightly toolchain
 jobs:
   lints:
+    strategy:
+      matrix:
+        manifest_path:
+          - "Cargo.toml"
+          - "horcrux/Cargo.toml"
+        rustflags:
+          - "-D warnings"
+          - "-C target-cpu=native -D warnings"
+        features:
+          - ""
+          - "--all-features"
     runs-on: ubuntu-latest
     env:
       RUSTFLAGS: "-D warnings"
@@ -20,14 +31,10 @@ jobs:
           command: fmt
           args: -- --check
 
-      - name: Check Clippy lints (root directory)
+      - name: Check Clippy lints
         uses: actions-rs/cargo@v1
+        env:
+          RUSTFLAGS: ${{ matrix.rustflags }}
         with:
           command: clippy
-          args: --verbose
-
-      - name: Check Clippy lints (horcrux/ library)
-        uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-          args: --manifest-path horcrux/Cargo.toml --verbose
+          args: --manifest-path ${{ matrix.manifest_path }} ${{ matrix.features }} --verbose
