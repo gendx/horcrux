@@ -33,7 +33,7 @@ jobs:
           toolchain: nightly
           override: true
 
-      - name: Tests (${{ matrix.test_case }})
+      - name: Tests
         uses: actions-rs/cargo@v1
         with:
           command: test
