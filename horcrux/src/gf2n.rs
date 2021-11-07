@@ -6,6 +6,7 @@
 use crate::field::Field;
 use rand::distributions::{Distribution, Standard};
 use rand::{CryptoRng, Rng};
+#[cfg(feature = "parse")]
 use std::convert::TryInto;
 use std::fmt::{Debug, Display};
 use std::hash::{Hash, Hasher};
