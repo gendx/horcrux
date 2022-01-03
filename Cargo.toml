@@ -14,7 +14,11 @@ clap = "2.33.3"
 hex = "0.4.3"
 rand = "0.8.4"
 regex = "1"
+tiny-bip39 = { version = "^0.8", optional = true }
 
 [dev-dependencies]
 plotters = "0.3.1"
 plotters-backend = "0.3.2"
+
+[features]
+bip39 = [ "tiny-bip39" ]

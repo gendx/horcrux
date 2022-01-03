@@ -4,9 +4,29 @@ use horcrux::gf2n::{GF128, GF16, GF256, GF32, GF64, GF8};
 use horcrux::shamir::{CompactShamir, RandomShamir, Shamir};
 use rand::thread_rng;
 use regex::Regex;
+use std::str::FromStr;
 use std::fmt::{Debug, Display};
 use std::fs::File;
 use std::io::{BufRead, BufReader, Read};
+
+mod mnemonic;
+use crate::mnemonic::{Bip39, Bip39Shamir};
+
+enum FormatType {
+    Hex,
+    Bip39,
+}
+
+impl FromStr for FormatType {
+    type Err = ();
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "hex" => Ok(FormatType::Hex),
+            "bip39" => Ok(FormatType::Bip39),
+            _ => Err(()),
+        }
+    }
+}
 
 fn main() {
     let matches = App::new("Horcrux")
@@ -45,6 +65,12 @@ fn main() {
                 .takes_value(true)
                 .required(true)
                 .help("Minimum number of shares required to reconstruct the secret (1 <= t <= n)"),
+        )
+        .arg(
+            Arg::with_name("format-type")
+                .long("format-type")
+                .takes_value(true)
+                .help("Field value formatting type possible values include: [hex|bip39] [default: hex]")
         )
         .subcommand(
             SubCommand::with_name("split")
@@ -99,13 +125,40 @@ fn main() {
         "--threshold must be between 1 and --shares"
     );
 
+    let format_type = match matches.value_of("format-type") {
+        Some(format_type_str) => format_type_str
+            .parse::<FormatType>()
+            .expect("--format-type must be one of the following: [hex|bip39]"),
+        None => FormatType::Hex,
+    };
+
+    let format_error = || panic!("bip39 encoding is only available for 128 and 256 bit keys");
+
     match bitsize {
-        8 => dispatch_shamir_type::<GF8>(matches, threshold, shares),
-        16 => dispatch_shamir_type::<GF16>(matches, threshold, shares),
-        32 => dispatch_shamir_type::<GF32>(matches, threshold, shares),
-        64 => dispatch_shamir_type::<GF64>(matches, threshold, shares),
-        128 => dispatch_shamir_type::<GF128>(matches, threshold, shares),
-        256 => dispatch_shamir_type::<GF256>(matches, threshold, shares),
+        8 => match format_type {
+            FormatType::Hex => dispatch_shamir_type::<GF8>(matches, threshold, shares),
+            FormatType::Bip39 => format_error()
+        },
+        16 => match format_type {
+            FormatType::Hex => dispatch_shamir_type::<GF16>(matches, threshold, shares),
+            FormatType::Bip39 => format_error()
+        },
+        32 => match format_type {
+            FormatType::Hex => dispatch_shamir_type::<GF32>(matches, threshold, shares),
+            FormatType::Bip39 => format_error()
+        },
+        64 => match format_type {
+            FormatType::Hex => dispatch_shamir_type::<GF64>(matches, threshold, shares),
+            FormatType::Bip39 => format_error()
+        },
+        128 => match format_type {
+            FormatType::Hex => dispatch_shamir_type::<GF128>(matches, threshold, shares),
+            FormatType::Bip39 => dispatch_mnemonic_shamir_type::<GF128>(matches, threshold, shares),
+        },
+        256 => match format_type {
+            FormatType::Hex => dispatch_shamir_type::<GF256>(matches, threshold, shares),
+            FormatType::Bip39 => dispatch_mnemonic_shamir_type::<Bip39<GF256>>(matches, threshold, shares),
+        },
         _ => panic!("Unsupported bitsize: {}", bitsize),
     }
 }
@@ -115,6 +168,15 @@ fn dispatch_shamir_type<F: Field + Debug + Display>(matches: ArgMatches, k: usiz
     match shamir_type {
         "compact" => process_command::<F, CompactShamir>(matches, k, n),
         "random" => process_command::<F, RandomShamir>(matches, k, n),
+        _ => panic!("Unsupported shamir type: {}", shamir_type),
+    };
+}
+
+fn dispatch_mnemonic_shamir_type<F: Field + Debug + Display>(matches: ArgMatches, k: usize, n: usize) {
+    let shamir_type = matches.value_of("type").unwrap();
+    match shamir_type {
+        "compact" => process_command::<F, Bip39Shamir<CompactShamir>>(matches, k, n),
+        "random" => process_command::<F, Bip39Shamir<RandomShamir>>(matches, k, n),
         _ => panic!("Unsupported shamir type: {}", shamir_type),
     };
 }
