@@ -12,6 +12,7 @@ use std::io::{BufRead, BufReader, Read};
 mod mnemonic;
 use crate::mnemonic::{Bip39, Bip39Shamir};
 
+#[derive(Copy, Clone)]
 enum FormatType {
     Hex,
     Bip39,
@@ -136,47 +137,57 @@ fn main() {
 
     match bitsize {
         8 => match format_type {
-            FormatType::Hex => dispatch_shamir_type::<GF8>(matches, threshold, shares),
+            FormatType::Hex => dispatch_shamir_type::<GF8>(matches, threshold, shares, format_type),
             FormatType::Bip39 => format_error()
         },
         16 => match format_type {
-            FormatType::Hex => dispatch_shamir_type::<GF16>(matches, threshold, shares),
+            FormatType::Hex => dispatch_shamir_type::<GF16>(matches, threshold, shares, format_type),
             FormatType::Bip39 => format_error()
         },
         32 => match format_type {
-            FormatType::Hex => dispatch_shamir_type::<GF32>(matches, threshold, shares),
+            FormatType::Hex => dispatch_shamir_type::<GF32>(matches, threshold, shares, format_type),
             FormatType::Bip39 => format_error()
         },
         64 => match format_type {
-            FormatType::Hex => dispatch_shamir_type::<GF64>(matches, threshold, shares),
+            FormatType::Hex => dispatch_shamir_type::<GF64>(matches, threshold, shares, format_type),
             FormatType::Bip39 => format_error()
         },
         128 => match format_type {
-            FormatType::Hex => dispatch_shamir_type::<GF128>(matches, threshold, shares),
-            FormatType::Bip39 => dispatch_mnemonic_shamir_type::<GF128>(matches, threshold, shares),
+            FormatType::Hex => dispatch_shamir_type::<GF128>(matches, threshold, shares, format_type),
+            FormatType::Bip39 => dispatch_mnemonic_shamir_type::<GF128>(matches, threshold, shares, format_type),
         },
         256 => match format_type {
-            FormatType::Hex => dispatch_shamir_type::<GF256>(matches, threshold, shares),
-            FormatType::Bip39 => dispatch_mnemonic_shamir_type::<Bip39<GF256>>(matches, threshold, shares),
+            FormatType::Hex => dispatch_shamir_type::<GF256>(matches, threshold, shares, format_type),
+            FormatType::Bip39 => dispatch_mnemonic_shamir_type::<Bip39<GF256>>(matches, threshold, shares, format_type),
         },
         _ => panic!("Unsupported bitsize: {}", bitsize),
     }
 }
 
-fn dispatch_shamir_type<F: Field + Debug + Display>(matches: ArgMatches, k: usize, n: usize) {
+fn dispatch_shamir_type<F: Field + Debug + Display>(
+    matches: ArgMatches,
+    k: usize,
+    n: usize,
+    format_type: FormatType
+) {
     let shamir_type = matches.value_of("type").unwrap();
     match shamir_type {
-        "compact" => process_command::<F, CompactShamir>(matches, k, n),
-        "random" => process_command::<F, RandomShamir>(matches, k, n),
+        "compact" => process_command::<F, CompactShamir>(matches, k, n, format_type),
+        "random" => process_command::<F, RandomShamir>(matches, k, n, format_type),
         _ => panic!("Unsupported shamir type: {}", shamir_type),
     };
 }
 
-fn dispatch_mnemonic_shamir_type<F: Field + Debug + Display>(matches: ArgMatches, k: usize, n: usize) {
+fn dispatch_mnemonic_shamir_type<F: Field + Debug + Display>(
+    matches: ArgMatches,
+    k: usize,
+    n: usize,
+    format_type: FormatType
+) {
     let shamir_type = matches.value_of("type").unwrap();
     match shamir_type {
-        "compact" => process_command::<F, Bip39Shamir<CompactShamir>>(matches, k, n),
-        "random" => process_command::<F, Bip39Shamir<RandomShamir>>(matches, k, n),
+        "compact" => process_command::<F, Bip39Shamir<CompactShamir>>(matches, k, n, format_type),
+        "random" => process_command::<F, Bip39Shamir<RandomShamir>>(matches, k, n, format_type),
         _ => panic!("Unsupported shamir type: {}", shamir_type),
     };
 }
@@ -185,17 +196,23 @@ fn process_command<F: Field + Debug + Display, S: Shamir<F>>(
     matches: ArgMatches,
     k: usize,
     n: usize,
+    format_type: FormatType,
 ) where
     S::Share: Display,
 {
     match matches.subcommand() {
-        ("split", Some(args)) => split::<F, S>(args, k, n),
+        ("split", Some(args)) => split::<F, S>(args, k, n, format_type),
         ("reconstruct", Some(args)) => reconstruct::<F, S>(args, k),
         (command, _) => panic!("Unsupported command: {}", command),
     };
 }
 
-fn split<F: Field + Debug + Display, S: Shamir<F>>(args: &ArgMatches, k: usize, n: usize)
+fn split<F: Field + Debug + Display, S: Shamir<F>>(
+    args: &ArgMatches,
+    k: usize,
+    n: usize,
+    format_type: FormatType
+)
 where
     S::Share: Display,
 {
@@ -204,7 +221,10 @@ where
             let mut rng = thread_rng();
             F::uniform(&mut rng)
         }
-        Some(filename) => parse_secret::<F>(filename),
+        Some(filename) => match format_type {
+            FormatType::Hex => parse_ascii_secret::<F>(filename),
+            FormatType::Bip39 => parse_mnemonic_secret::<F>(filename),
+        },
     };
     println!("Secret = {}", secret);
 
@@ -249,7 +269,7 @@ where
     }
 }
 
-fn parse_secret<F: Field>(filename: &str) -> F {
+fn parse_ascii_secret<F: Field>(filename: &str) -> F {
     let mut file = File::open(filename).unwrap();
     let mut contents = String::new();
     file.read_to_string(&mut contents).unwrap();
@@ -272,6 +292,24 @@ fn parse_secret<F: Field>(filename: &str) -> F {
         Some(f) => f,
         None => panic!("Secret is not a valid represetation of a field element"),
     }
+}
+
+#[cfg(feature = "bip39")]
+fn parse_mnemonic_secret<F: Field>(filename: &str) -> F {
+    use bip39::{Mnemonic, Language};
+    let mut file = File::open(filename).unwrap();
+    let mut contents = String::new();
+    file.read_to_string(&mut contents).unwrap();
+    let mnemonic = Mnemonic::from_phrase(&contents, Language::English).unwrap();
+    match F::from_bytes(mnemonic.entropy()) {
+        Some(f) => f,
+        None => panic!("Secret is not a valid represetation of a field element"),
+    }
+}
+
+#[cfg(not(feature = "bip39"))]
+fn parse_mnemonic_secret<F: Field>(_: &str) -> F {
+    panic!("bip39 mnemonics requires the bip39 feature flag")
 }
 
 fn parse_shares<F: Field + Debug + Display, S: Shamir<F>>(filename: &str) -> Vec<S::Share> {
