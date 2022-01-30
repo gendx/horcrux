@@ -946,6 +946,7 @@ mod test {
         }
 
         use test::Bencher;
+        use std::hint::black_box;
 
         const TEST_VALUE: F = F::new([!W::ZERO; F::NWORDS]);
 
@@ -953,39 +954,39 @@ mod test {
         fn bench_mul(b: &mut Bencher) {
             let x = TEST_VALUE;
             let y = TEST_VALUE;
-            b.iter(|| x * &y);
+            b.iter(|| black_box(x) * &black_box(y));
         }
 
         #[bench]
         fn bench_mul_as_add(b: &mut Bencher) {
             let x = TEST_VALUE;
             let y = TEST_VALUE;
-            b.iter(|| x.mul_as_add(&y));
+            b.iter(|| black_box(x).mul_as_add(&black_box(y)));
         }
 
         #[bench]
         fn bench_mul_fused_carry(b: &mut Bencher) {
             let x = TEST_VALUE;
             let y = TEST_VALUE;
-            b.iter(|| x.mul_fused_carry(&y));
+            b.iter(|| black_box(x).mul_fused_carry(&black_box(y)));
         }
 
         #[bench]
         fn bench_invert(b: &mut Bencher) {
             let x = TEST_VALUE;
-            b.iter(|| x.invert());
+            b.iter(|| black_box(x).invert());
         }
 
         #[bench]
         fn bench_shl1(b: &mut Bencher) {
             let x = TEST_VALUE;
-            b.iter(|| x.shl1_ret());
+            b.iter(|| black_box(x).shl1_ret());
         }
 
         #[bench]
         fn bench_shlt(b: &mut Bencher) {
             let x = TEST_VALUE;
-            b.iter(|| x.shlt_ret());
+            b.iter(|| black_box(x).shlt_ret());
         }
     }
 
@@ -1030,6 +1031,7 @@ mod test {
         }
 
         use test::Bencher;
+        use std::hint::black_box;
 
         const TEST_VALUE: F = F::new([!W::ZERO; F::NWORDS]);
 
@@ -1037,7 +1039,7 @@ mod test {
         fn bench_mul_clmul(b: &mut Bencher) {
             let x = TEST_VALUE;
             let y = TEST_VALUE;
-            b.iter(|| super::super::mul_clmul_u64(&x, &y));
+            b.iter(|| super::super::mul_clmul_u64(&black_box(x), &black_box(y)));
         }
     }
 }

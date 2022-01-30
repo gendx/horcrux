@@ -1,4 +1,4 @@
-#![feature(test, const_fn_trait_bound)]
+#![feature(bench_black_box, test, const_fn_trait_bound)]
 #![deny(missing_docs)]
 
 //! Rust implementation of Shamir's Secret Sharing.
