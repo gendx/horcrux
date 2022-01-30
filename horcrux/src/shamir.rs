@@ -654,11 +654,12 @@ mod test {
     use rand::rngs::SmallRng;
     use rand::seq::SliceRandom;
     use rand::SeedableRng;
+    use std::hint::black_box;
     use test::Bencher;
 
     fn bench_split<F: Field + Debug, S: Shamir<F> + ?Sized>(b: &mut Bencher, k: usize, n: usize) {
         let secret = F::uniform(&mut thread_rng());
-        b.iter(|| S::split(&secret, k, n));
+        b.iter(|| S::split(black_box(&secret), k, n));
     }
 
     fn bench_reconstruct<F: Field + Debug, S: Shamir<F> + ?Sized>(
@@ -668,7 +669,7 @@ mod test {
     ) {
         let secret = F::uniform(&mut thread_rng());
         let shares = S::split(&secret, k, n);
-        b.iter(|| S::reconstruct(&shares, k));
+        b.iter(|| S::reconstruct(black_box(&shares), k));
     }
 
     fn bench_reconstruct_arbitrary<F: Field + std::fmt::Debug, S: Shamir<F> + ?Sized>(
@@ -683,7 +684,7 @@ mod test {
         b.iter(|| {
             // Pick arbitrary values on each run.
             let (chosen, _) = shares.partial_shuffle(&mut rng, k);
-            S::reconstruct(&chosen, k)
+            S::reconstruct(black_box(&chosen), k)
         });
     }
 
@@ -695,7 +696,7 @@ mod test {
         let secret = F::uniform(&mut thread_rng());
         let shares = S::split(&secret, k, n);
         let x = S::X::from(42);
-        b.iter(|| S::reconstruct_at(&shares, k, x));
+        b.iter(|| S::reconstruct_at(black_box(&shares), k, black_box(x)));
     }
 
     fn bench_reconstruct_at_arbitrary<F: Field + std::fmt::Debug, S: Shamir<F> + ?Sized>(
@@ -711,7 +712,7 @@ mod test {
         b.iter(|| {
             // Pick arbitrary values on each run.
             let (chosen, _) = shares.partial_shuffle(&mut rng, k);
-            S::reconstruct_at(&chosen, k, x)
+            S::reconstruct_at(black_box(&chosen), k, black_box(x))
         });
     }
 }
