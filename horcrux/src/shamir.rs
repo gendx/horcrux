@@ -19,6 +19,9 @@ pub trait Shamir<F: Field> {
     /// Type for shares split from the secret.
     type Share: Copy + Debug + PartialEq + GetX<Self::X>;
 
+    /// Create a share from its base components
+    fn share(x: Self::X, y: F) -> Self::Share;
+
     /// Splits a secret into n shares, with k shares being sufficient to reconstruct it.
     fn split(secret: &F, k: usize, n: usize) -> Vec<Self::Share>;
 
@@ -110,6 +113,10 @@ impl<F: Field + Debug + Display> Shamir<F> for CompactShamir {
     type X = u8;
     type Share = CompactShare<F>;
 
+    fn share(x: Self::X, y: F) -> Self::Share {
+        Self::Share { x, y }
+    }
+
     fn split(secret: &F, k: usize, n: usize) -> Vec<Self::Share> {
         check_split_parameters(k, n);
 
@@ -200,6 +207,10 @@ impl<F: Field + Debug + Display> Shamir<F> for CompactShamir {
 impl<F: Field + Debug + Display> Shamir<F> for RandomShamir {
     type X = F;
     type Share = RandomShare<F>;
+
+    fn share(x: Self::X, y: F) -> Self::Share {
+        Self::Share { x, y }
+    }
 
     fn split(secret: &F, k: usize, n: usize) -> Vec<Self::Share> {
         check_split_parameters(k, n);
