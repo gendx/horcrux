@@ -294,6 +294,51 @@ fn mul_clmul_u64<const NWORDS: usize, const A: usize, const B: usize, const C: u
     GF2n::<u64, NWORDS, A, B, C>::propagate_carries(words, carry)
 }
 
+#[cfg(all(
+    feature = "clmul",
+    target_arch = "aarch64",
+    target_feature = "neon",
+    target_feature = "aes"
+))]
+fn mul_clmul_u64<const NWORDS: usize, const A: usize, const B: usize, const C: usize>(
+    x: &GF2n<u64, NWORDS, A, B, C>,
+    y: &GF2n<u64, NWORDS, A, B, C>,
+) -> GF2n<u64, NWORDS, A, B, C> {
+    use std::arch::aarch64::vmull_p64;
+
+    // Note: we cannot create an array of `NWORDS * 2` elements:
+    // error: constant expression depends on a generic parameter
+    let mut words = [0u64; NWORDS];
+    let mut carry = [0u64; NWORDS];
+
+    for i in 0..NWORDS {
+        let xi = x.words[i];
+        for j in 0..NWORDS {
+            let yj = y.words[j];
+            // Safety: target_feature's "neon" and "aes" are available in this function.
+            let clmul: u128 = unsafe { vmull_p64(xi, yj) };
+            let low: u64 = clmul as u64;
+            let high: u64 = (clmul >> 64) as u64;
+
+            let ij = i + j;
+            if ij < NWORDS {
+                words[ij] ^= low;
+            } else {
+                carry[ij - NWORDS] ^= low;
+            }
+
+            let ij1 = ij + 1;
+            if ij1 < NWORDS {
+                words[ij1] ^= high;
+            } else {
+                carry[ij1 - NWORDS] ^= high;
+            }
+        }
+    }
+
+    GF2n::<u64, NWORDS, A, B, C>::propagate_carries(words, carry)
+}
+
 impl<W: Word, const NWORDS: usize, const A: usize, const B: usize, const C: usize>
     GF2n<W, NWORDS, A, B, C>
 {
@@ -494,6 +539,12 @@ impl<W: Word, const NWORDS: usize, const A: usize, const B: usize, const C: usiz
             target_arch = "x86_64",
             target_feature = "sse2",
             target_feature = "pclmulqdq"
+        ),
+        all(
+            feature = "clmul",
+            target_arch = "aarch64",
+            target_feature = "neon",
+            target_feature = "aes"
         )
     ))]
     fn propagate_carries(mut words: [W; NWORDS], carry: [W; NWORDS]) -> Self {
@@ -637,6 +688,22 @@ impl<W: Word, const NWORDS: usize, const A: usize, const B: usize, const C: usiz
             let result: &Self = unsafe { std::mem::transmute(&tmp) };
             return *result;
         }
+        #[cfg(all(
+            feature = "clmul",
+            target_arch = "aarch64",
+            target_feature = "neon",
+            target_feature = "aes"
+        ))]
+        if W::NBITS == 64 {
+            // Safety: W == u64 when NBITS == 64.
+            let x: &GF2n<u64, NWORDS, A, B, C> = unsafe { std::mem::transmute(&self) };
+            // Safety: W == u64 when NBITS == 64.
+            let y: &GF2n<u64, NWORDS, A, B, C> = unsafe { std::mem::transmute(other) };
+            let tmp: GF2n<u64, NWORDS, A, B, C> = unsafe { mul_clmul_u64(x, y) };
+            // Safety: W == u64 when NBITS == 64.
+            let result: &Self = unsafe { std::mem::transmute(&tmp) };
+            return *result;
+        }
         self.mul_as_add(other)
     }
 }
@@ -717,51 +784,99 @@ mod test {
 
     macro_rules! for_all_clmul {
         ( $($tests:tt)* ) => {
-            #[cfg(all(
-                feature = "clmul",
-                target_arch = "x86_64",
-                target_feature = "sse2",
-                target_feature = "pclmulqdq"
+            #[cfg(any(
+                all(
+                    feature = "clmul",
+                    target_arch = "x86_64",
+                    target_feature = "sse2",
+                    target_feature = "pclmulqdq"
+                ),
+                all(
+                    feature = "clmul",
+                    target_arch = "aarch64",
+                    target_feature = "neon",
+                    target_feature = "aes"
+                )
             ))]
             for_field!(clmul_gf064, GF64, $($tests)*);
 
-            #[cfg(all(
-                feature = "clmul",
-                target_arch = "x86_64",
-                target_feature = "sse2",
-                target_feature = "pclmulqdq"
+            #[cfg(any(
+                all(
+                    feature = "clmul",
+                    target_arch = "x86_64",
+                    target_feature = "sse2",
+                    target_feature = "pclmulqdq"
+                ),
+                all(
+                    feature = "clmul",
+                    target_arch = "aarch64",
+                    target_feature = "neon",
+                    target_feature = "aes"
+                )
             ))]
             for_field!(clmul_gf128, GF128, $($tests)*);
 
-            #[cfg(all(
-                feature = "clmul",
-                target_arch = "x86_64",
-                target_feature = "sse2",
-                target_feature = "pclmulqdq"
+            #[cfg(any(
+                all(
+                    feature = "clmul",
+                    target_arch = "x86_64",
+                    target_feature = "sse2",
+                    target_feature = "pclmulqdq"
+                ),
+                all(
+                    feature = "clmul",
+                    target_arch = "aarch64",
+                    target_feature = "neon",
+                    target_feature = "aes"
+                )
             ))]
             for_field!(clmul_gf256, GF256, $($tests)*);
 
-            #[cfg(all(
-                feature = "clmul",
-                target_arch = "x86_64",
-                target_feature = "sse2",
-                target_feature = "pclmulqdq"
+            #[cfg(any(
+                all(
+                    feature = "clmul",
+                    target_arch = "x86_64",
+                    target_feature = "sse2",
+                    target_feature = "pclmulqdq"
+                ),
+                all(
+                    feature = "clmul",
+                    target_arch = "aarch64",
+                    target_feature = "neon",
+                    target_feature = "aes"
+                )
             ))]
             for_field!(clmul_gf512, GF512, $($tests)*);
 
-            #[cfg(all(
-                feature = "clmul",
-                target_arch = "x86_64",
-                target_feature = "sse2",
-                target_feature = "pclmulqdq"
+            #[cfg(any(
+                all(
+                    feature = "clmul",
+                    target_arch = "x86_64",
+                    target_feature = "sse2",
+                    target_feature = "pclmulqdq"
+                ),
+                all(
+                    feature = "clmul",
+                    target_arch = "aarch64",
+                    target_feature = "neon",
+                    target_feature = "aes"
+                )
             ))]
             for_field!(clmul_gf1024, GF1024, $($tests)*);
 
-            #[cfg(all(
-                feature = "clmul",
-                target_arch = "x86_64",
-                target_feature = "sse2",
-                target_feature = "pclmulqdq"
+            #[cfg(any(
+                all(
+                    feature = "clmul",
+                    target_arch = "x86_64",
+                    target_feature = "sse2",
+                    target_feature = "pclmulqdq"
+                ),
+                all(
+                    feature = "clmul",
+                    target_arch = "aarch64",
+                    target_feature = "neon",
+                    target_feature = "aes"
+                )
             ))]
             for_field!(clmul_gf2048, GF2048, $($tests)*);
         };
