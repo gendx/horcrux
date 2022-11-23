@@ -19,17 +19,10 @@ jobs:
       RUSTFLAGS: "-D warnings"
     steps:
       - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
+      - uses: dtolnay/rust-toolchain@nightly
         with:
-          profile: minimal
-          toolchain: nightly
-          override: true
           components: clippy
-
       - name: Check Clippy lints
-        uses: actions-rs/cargo@v1
         env:
           RUSTFLAGS: ${{ matrix.rustflags }}
-        with:
-          command: clippy
-          args: --manifest-path ${{ matrix.manifest_path }} ${{ matrix.features }} --verbose
+        run: cargo clippy --manifest-path ${{ matrix.manifest_path }} ${{ matrix.features }} --verbose

@@ -5,24 +5,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: nightly
-          override: true
-
+      - uses: dtolnay/rust-toolchain@nightly
       - name: Build
-        uses: actions-rs/cargo@v1
         env:
           RUSTFLAGS: "-D warnings"
-        with:
-          command: build
-          args: --all --verbose
-
+        run: cargo build --all --verbose
       - name: Build for native CPU
-        uses: actions-rs/cargo@v1
         env:
           RUSTFLAGS: "-C target-cpu=native -D warnings"
-        with:
-          command: build
-          args: --all --verbose
+        run: cargo build --all --verbose
