@@ -201,11 +201,11 @@ impl<W: Word, const NWORDS: usize, const A: usize, const B: usize, const C: usiz
     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         for d in &self.words as &[W] {
             match W::NBITS {
-                8 => f.write_fmt(format_args!("{:02x?}", d))?,
-                16 => f.write_fmt(format_args!("{:04x?}", d))?,
-                32 => f.write_fmt(format_args!("{:08x?}", d))?,
-                64 => f.write_fmt(format_args!("{:016x?}", d))?,
-                128 => f.write_fmt(format_args!("{:032x?}", d))?,
+                8 => f.write_fmt(format_args!("{d:02x?}"))?,
+                16 => f.write_fmt(format_args!("{d:04x?}"))?,
+                32 => f.write_fmt(format_args!("{d:08x?}"))?,
+                64 => f.write_fmt(format_args!("{d:016x?}"))?,
+                128 => f.write_fmt(format_args!("{d:032x?}"))?,
                 _ => unimplemented!(),
             }
         }

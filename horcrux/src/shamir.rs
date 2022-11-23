@@ -97,10 +97,10 @@ fn generate_polynom<F: Field + Debug + Display>(secret: &F, k: usize) -> Vec<F> 
     let mut rng = thread_rng();
 
     let mut polynom = Vec::with_capacity(k);
-    println!("Polynom = {}", secret);
+    println!("Polynom = {secret}");
     for i in 1..k {
         polynom.push(F::uniform(&mut rng));
-        println!("    + {} x^{}", polynom.last().unwrap(), i);
+        println!("    + {} x^{i}", polynom.last().unwrap());
     }
 
     polynom
