@@ -30,3 +30,53 @@ jobs:
       - uses: dtolnay/rust-toolchain@nightly
       - name: Tests
         run: cargo test --release --all ${{ matrix.test_case }}
+
+  cross:
+    strategy:
+      matrix:
+        arch:
+          - aarch64
+          - armv7
+          - i686
+          - x86_64
+        test_case:
+          - "gf2n::test::fast_"
+          - "gf2n::test::gf008::"
+          - "gf2n::test::gf016::"
+          - "gf2n::test::gf032::"
+          - "gf2n::test::gf064::"
+          - "gf2n::test::gf128::"
+          - "gf2n::test::gf256::"
+          - "shamir::test::fast_"
+          - "shamir::test::gf008::"
+          - "shamir::test::gf016::"
+          - "shamir::test::gf032::"
+          - "shamir::test::gf064::"
+          - "shamir::test::gf128::"
+          - "shamir::test::gf256::"
+          - "can_split"
+        include:
+          - arch: aarch64
+            target: aarch64-unknown-linux-gnu
+            rust_features: "+neon,+aes"
+          - arch: armv7
+            target: armv7-linux-androideabi
+            rust_features: ""
+          - arch: i686
+            target: i686-unknown-linux-gnu
+            rust_features: ""
+          - arch: x86_64
+            target: x86_64-unknown-linux-gnu
+            rust_features: "+sse2,+pclmulqdq"
+      fail-fast: false
+    runs-on: ubuntu-latest
+    env:
+      RUSTFLAGS: "-C target-feature=${{ matrix.rust_features }} -D warnings"
+    steps:
+      - uses: actions/checkout@v2
+      - uses: dtolnay/rust-toolchain@nightly
+        with:
+          target: ${{ matrix.target }}
+      - run: cargo install cross
+      - name: Tests
+        run: cross test --target ${{ matrix.target }} --manifest-path "horcrux/Cargo.toml" --release --verbose ${{ matrix.test_case }}
