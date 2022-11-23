@@ -672,11 +672,19 @@ impl<W: Word, const NWORDS: usize, const A: usize, const B: usize, const C: usiz
     type Output = Self;
 
     fn mul(self, other: &Self) -> Self {
-        #[cfg(all(
-            feature = "clmul",
-            target_arch = "x86_64",
-            target_feature = "sse2",
-            target_feature = "pclmulqdq"
+        #[cfg(any(
+            all(
+                feature = "clmul",
+                target_arch = "x86_64",
+                target_feature = "sse2",
+                target_feature = "pclmulqdq"
+            ),
+            all(
+                feature = "clmul",
+                target_arch = "aarch64",
+                target_feature = "neon",
+                target_feature = "aes"
+            )
         ))]
         if W::NBITS == 64 {
             // Safety: W == u64 when NBITS == 64.
@@ -684,22 +692,6 @@ impl<W: Word, const NWORDS: usize, const A: usize, const B: usize, const C: usiz
             // Safety: W == u64 when NBITS == 64.
             let y: &GF2n<u64, NWORDS, A, B, C> = unsafe { std::mem::transmute(other) };
             let tmp: GF2n<u64, NWORDS, A, B, C> = mul_clmul_u64(x, y);
-            // Safety: W == u64 when NBITS == 64.
-            let result: &Self = unsafe { std::mem::transmute(&tmp) };
-            return *result;
-        }
-        #[cfg(all(
-            feature = "clmul",
-            target_arch = "aarch64",
-            target_feature = "neon",
-            target_feature = "aes"
-        ))]
-        if W::NBITS == 64 {
-            // Safety: W == u64 when NBITS == 64.
-            let x: &GF2n<u64, NWORDS, A, B, C> = unsafe { std::mem::transmute(&self) };
-            // Safety: W == u64 when NBITS == 64.
-            let y: &GF2n<u64, NWORDS, A, B, C> = unsafe { std::mem::transmute(other) };
-            let tmp: GF2n<u64, NWORDS, A, B, C> = unsafe { mul_clmul_u64(x, y) };
             // Safety: W == u64 when NBITS == 64.
             let result: &Self = unsafe { std::mem::transmute(&tmp) };
             return *result;
