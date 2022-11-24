@@ -24,6 +24,7 @@ jobs:
           - "can_reconstruct"
     runs-on: ubuntu-latest
     env:
+      CARGO_UNSTABLE_SPARSE_REGISTRY: true
       RUSTFLAGS: "-C target-cpu=native -D warnings"
     steps:
       - uses: actions/checkout@v2
@@ -71,6 +72,7 @@ jobs:
       fail-fast: false
     runs-on: ubuntu-latest
     env:
+      CARGO_UNSTABLE_SPARSE_REGISTRY: true
       RUSTFLAGS: "-C target-feature=${{ matrix.rust_features }} -D warnings"
     steps:
       - uses: actions/checkout@v2

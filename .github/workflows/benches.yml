@@ -4,6 +4,7 @@ jobs:
   build_benchmarks:
     runs-on: ubuntu-latest
     env:
+      CARGO_UNSTABLE_SPARSE_REGISTRY: true
       RUSTFLAGS: "-D warnings"
     steps:
       - uses: actions/checkout@v2
