@@ -5,24 +5,30 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        arch:
+          - aarch64
+          - x86_64
         manifest_path:
           - "Cargo.toml"
           - "horcrux/Cargo.toml"
-        rustflags:
-          - "-D warnings"
-          - "-C target-cpu=native -D warnings"
         features:
           - ""
           - "--all-features"
+        include:
+          - arch: aarch64
+            target: aarch64-unknown-linux-gnu
+            rust_features: "+neon,+aes"
+          - arch: x86_64
+            target: x86_64-unknown-linux-gnu
+            rust_features: "+sse2,+pclmulqdq"
     runs-on: ubuntu-latest
     env:
-      RUSTFLAGS: "-D warnings"
+      RUSTFLAGS: "-C target-feature=${{ matrix.rust_features }} -D warnings"
     steps:
       - uses: actions/checkout@v2
       - uses: dtolnay/rust-toolchain@nightly
         with:
+          target: ${{ matrix.target }}
           components: clippy
       - name: Check Clippy lints
-        env:
-          RUSTFLAGS: ${{ matrix.rustflags }}
-        run: cargo clippy --manifest-path ${{ matrix.manifest_path }} ${{ matrix.features }} --verbose
+        run: cargo clippy --target ${{ matrix.target }} --manifest-path ${{ matrix.manifest_path }} ${{ matrix.features }} --verbose
