@@ -37,21 +37,6 @@ jobs:
           - armv7
           - i686
           - x86_64
-        test_case:
-          - "gf2n::test::fast_"
-          - "gf2n::test::gf008::"
-          - "gf2n::test::gf016::"
-          - "gf2n::test::gf032::"
-          - "gf2n::test::gf064::"
-          - "gf2n::test::gf128::"
-          - "gf2n::test::gf256::"
-          - "shamir::test::gf008::"
-          - "shamir::test::gf016::"
-          - "shamir::test::gf032::"
-          - "shamir::test::gf064::"
-          - "shamir::test::gf128::"
-          - "shamir::test::gf256::"
-          - "can_split"
         include:
           - arch: aarch64
             target: aarch64-unknown-linux-gnu
@@ -76,5 +61,23 @@ jobs:
         with:
           target: ${{ matrix.target }}
       - run: cargo install cross
-      - name: Tests
-        run: cross test --target ${{ matrix.target }} --manifest-path "horcrux/Cargo.toml" --release --verbose ${{ matrix.test_case }}
+      - name: Tests (GF2n)
+        run: |
+          cross test --target ${{ matrix.target }} --manifest-path "horcrux/Cargo.toml" --release --verbose "gf2n::test::gf008::";
+          cross test --target ${{ matrix.target }} --manifest-path "horcrux/Cargo.toml" --release --verbose "gf2n::test::gf016::";
+          cross test --target ${{ matrix.target }} --manifest-path "horcrux/Cargo.toml" --release --verbose "gf2n::test::gf032::";
+          cross test --target ${{ matrix.target }} --manifest-path "horcrux/Cargo.toml" --release --verbose "gf2n::test::gf064::";
+          cross test --target ${{ matrix.target }} --manifest-path "horcrux/Cargo.toml" --release --verbose "gf2n::test::gf128::";
+          cross test --target ${{ matrix.target }} --manifest-path "horcrux/Cargo.toml" --release --verbose "gf2n::test::gf256::";
+      - name: Tests (Shamir)
+        run: |
+          cross test --target ${{ matrix.target }} --manifest-path "horcrux/Cargo.toml" --release --verbose "shamir::test::gf008::";
+          cross test --target ${{ matrix.target }} --manifest-path "horcrux/Cargo.toml" --release --verbose "shamir::test::gf016::";
+          cross test --target ${{ matrix.target }} --manifest-path "horcrux/Cargo.toml" --release --verbose "shamir::test::gf032::";
+          cross test --target ${{ matrix.target }} --manifest-path "horcrux/Cargo.toml" --release --verbose "shamir::test::gf064::";
+          cross test --target ${{ matrix.target }} --manifest-path "horcrux/Cargo.toml" --release --verbose "shamir::test::gf128::";
+          cross test --target ${{ matrix.target }} --manifest-path "horcrux/Cargo.toml" --release --verbose "shamir::test::gf256::";
+      - name: Tests (other)
+        run: |
+          cross test --target ${{ matrix.target }} --manifest-path "horcrux/Cargo.toml" --release --verbose "gf2n::test::fast_";
+          cross test --target ${{ matrix.target }} --manifest-path "horcrux/Cargo.toml" --release --verbose "can_split";
