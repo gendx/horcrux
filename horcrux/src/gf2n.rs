@@ -359,6 +359,11 @@ impl<W: Word, const NWORDS: usize, const A: usize, const B: usize, const C: usiz
         Self { words }
     }
 
+    /// Access the underlying bytes
+    pub const fn words(&self) -> [W; NWORDS] {
+        self.words
+    }
+
     #[cfg(test)]
     fn get_nonzero_test_values() -> Vec<Self> {
         let all_ones = [!W::ZERO; NWORDS];
